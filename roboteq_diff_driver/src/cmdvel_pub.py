@@ -2,12 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import rospy
-from std_msgs.msg import String
 import time
+import sys, select, termios, tty
 import numpy as np
-from geometry_msgs.msg import (Point, Quaternion, Pose, PoseArray, Twist,
-                               Transform, TransformStamped,
-                               PoseWithCovariance, PoseWithCovarianceStamped)
+from geometry_msgs.msg import Twist
 
 
 class cmdvelPublisher:
@@ -15,7 +13,10 @@ class cmdvelPublisher:
     def __init__(self):
         
         # ROS parameters
-
+        self.max_linear_vel = 10
+        self.max_angular_vel = 10
+        self.step_linear_vel = 0.5
+        self.step_angular_vel = 1
         # Initialize ros node
         rospy.init_node('cmd_vel_publisher', anonymous = True)
         # Subscriber
@@ -32,8 +33,6 @@ class cmdvelPublisher:
         '''
         average stacked pose and publish
         '''
-
-
         stamp = rospy.Time.now()
         init_pose_msg = InitPose()
         init_pose_msg.header.stamp = stamp
@@ -45,7 +44,6 @@ class cmdvelPublisher:
         
         
         self.init_pose_pub.publish(init_pose_msg)
-
 
 
 if __name__ == '__main__':
