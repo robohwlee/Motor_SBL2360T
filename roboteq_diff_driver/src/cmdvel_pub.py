@@ -13,14 +13,11 @@ class cmdvelPublisher:
     def __init__(self):
         
         # ROS parameters
-        self.max_linear_vel = 10
-        self.max_angular_vel = 10
-        self.step_linear_vel = 0.5
-        self.step_angular_vel = 1
+
         # Initialize ros node
         rospy.init_node('cmd_vel_publisher', anonymous = True)
         # Subscriber
-        
+        rospy.Subscriber('', dd, queue_size=1, )
         # Publisher
         self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=1)
 

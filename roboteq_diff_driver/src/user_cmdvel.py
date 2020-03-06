@@ -22,7 +22,7 @@ MOTOR_MIN_LINEAR_VEL = -20
 MOTOR_MIN_ANGULAR_VEL = -20
 
 space key: force stop
-x : steering init
+x : init
 
 CTRL-C to quit
 ----------------------------
@@ -31,6 +31,16 @@ CTRL-C to quit
 e = """
 Communications Failed
 """
+
+def getLinearKey():
+    key = input("Enter the linear speed you want  ")
+    return key
+
+
+def getAngularKey():
+    key = input("Enter the angular speed you want  ")
+    return key
+
 
 def getKey():
     tty.setraw(sys.stdin.fileno())
@@ -41,8 +51,8 @@ def getKey():
         key = ''
 
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
-    key = input("Enter the speed you want")
     return key
+
 
 def vels(target_linear_vel, target_angular_vel):
     return "currently:\tlinear vel %s\t angular vel %s " % (target_linear_vel,target_angular_vel)
@@ -78,40 +88,16 @@ if __name__ == '__main__':
     target_angular_vel = 0 # initialize angular vel
     try:
         print msg
-        while(1):
-            key = getKey()
-            if key == 'w' :
-                target_linear_vel +=1
-                target_linear_vel = checkLINEARLimitVelocity(target_linear_vel)
-                status = status + 1
-                print vels(target_linear_vel,target_angular_vel)
-            elif key == 's' :
-                target_linear_vel -=1
-                target_linear_vel = checkLINEARLimitVelocity(target_linear_vel)
-                status = status + 1
-                print vels(target_linear_vel,target_angular_vel)
-            elif key == 'a' :
-                target_angular_vel -=1
-                target_angular_vel = checkANGULARLimitVelocity(target_angular_vel)
-                status = status + 1
-                print vels(target_linear_vel,target_angular_vel)
-            elif key == 'd' :
-                target_angular_vel +=1
-                target_angular_vel = checkANGULARLimitVelocity(target_angular_vel)
-                status = status + 1
-                print vels(target_linear_vel,target_angular_vel)
-            elif key == ' ' :
-                target_linear_vel = 0
-                target_angular_vel = 0
-                print vels(target_linear_vel, target_angular_vel)
-            elif key == 'x' :
-                target_angular_vel = 0
-                status = status + 1
-                print vels(target_linear_vel,target_angular_vel)
-            else:
-                if (key == '\x03'):     # ^C
-                      break
+        while not rospy.is_shutdown():
+            linear_key = getLinearKey()
 
+            target_linear_vel = checkLINEARLimitVelocity(linear_key)
+
+            angular_key = getAngularKey()
+            target_angular_vel = checkLINEARLimitVelocity(angular_key)
+            
+            print vels(target_linear_vel,target_angular_vel)
+            status += 1
             if status == 20 :
                 print msg
                 status = 0
