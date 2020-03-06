@@ -15,18 +15,17 @@ MOTOR_MIN_ANGULAR_VEL = -20
 msg = """
 Control Your Motor
 ---------------------------
-Moving around:
-    w
-a   s   d
-    x
+MOTOR_MAX_LINEAR_VEL = 20
+MOTOR_MAX_ANGULAR_VEL = 20
 
-w/s : foward/backward linear velocity
-a/d : CCW/CW angular velocity
+MOTOR_MIN_LINEAR_VEL = -20
+MOTOR_MIN_ANGULAR_VEL = -20
 
 space key: force stop
 x : steering init
 
 CTRL-C to quit
+----------------------------
 """
 
 e = """
@@ -42,6 +41,7 @@ def getKey():
         key = ''
 
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
+    key = input("Enter the speed you want")
     return key
 
 def vels(target_linear_vel, target_angular_vel):
