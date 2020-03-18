@@ -36,6 +36,12 @@ rostopic pub /cmd_vel geometry_msgs/Twist -r 20 '[1, 0, 0]' '[0, 0, 5]'
 publish topic as linear velocity / angular velocity
 
 
+## configuration of motor
+check the roboteq_diff_driver/launch/driver.launch
+especially for
+'wheel_circumference', 'track_width', 'encoder_ppr', 'encoder_cpr' etc.
+
+
 ## Authors
 
 * **Chad Attermann** - *Initial work* - [Ecos Technologies](https://github.com/ecostech)
