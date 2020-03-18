@@ -19,12 +19,22 @@ sudo apt-get install ros-<dist>-serial
 
 Sample launch files in roboteq_diff_driver/launch.
 
-## TODO
 
-- [x] Make topic names and frames configuration parameters configurable at runtime.
-- [x] Make robot configuration parameters configurable at runtime.
-- [x] Make motor controller device configuration parameters configurable at runtime.
-- [ ] Make miscellaneous motor controller configuration parameters configurable at runtime.
+## cmd_vel topic publisher
+You can use any type of publisher as an input of motor controller
+This driver subscribe /cmd_vel topic as an iput
+
+### teleop keyboard node
+```
+rosrun teleop_twist_keyboard teleop_twist_keyboard.py
+```
+
+### Terminal
+```
+rostopic pub /cmd_vel geometry_msgs/Twist -r 20 '[1, 0, 0]' '[0, 0, 5]'
+```
+
+
 
 ## Authors
 
