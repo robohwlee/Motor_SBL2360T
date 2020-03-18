@@ -3,15 +3,6 @@
   <!-- publishes odom topic with base_link frame -->
   <!-- broadcasts odom->base_link transform -->
   <arg name="param" default="value" />
-  
-  <!-- publishe cmd_vel topic-->
-  <node pkg="robotequ_diff_driver" name="cmd_vel_publisher" type="cmdvel_pub.py" output="screen" respawn="true"/>
-    <!-- linear velocity -->
-    <param name="vel_linear" value="0" />
-    <!-- angular velocity -->
-    <param name="vel_angular" value="0" />
-  
-  <!-- robot driver -->
   <node pkg="roboteq_diff_driver" type="driver" name="roboteq_diff_driver" output="screen">
     <!-- enable broadcast of odom tf -->
     <param name="pub_odom_tf" value="true" />
