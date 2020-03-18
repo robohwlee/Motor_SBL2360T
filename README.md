@@ -33,7 +33,7 @@ rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 ```
 rostopic pub /cmd_vel geometry_msgs/Twist -r 20 '[1, 0, 0]' '[0, 0, 5]'
 ```
-
+publish topic as linear velocity / angular velocity
 
 
 ## Authors
