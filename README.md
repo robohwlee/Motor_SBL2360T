@@ -19,6 +19,9 @@ sudo apt-get install ros-<dist>-serial
 
 Sample launch files in roboteq_diff_driver/launch.
 
+'''
+roslaunch roboteq_diff_driver driver.launch
+'''
 
 ## cmd_vel topic publisher
 You can use any type of publisher as an input of motor controller
