@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <string>
 #include <sstream>
+#include <stdio.h>
 
 
 #define DELTAT(_nowtime,_thentime) ((_thentime>_nowtime)?((0xffffffff-_thentime)+_nowtime):(_nowtime-_thentime))
@@ -260,8 +261,12 @@ ROS_DEBUG_STREAM("cmdvel speed right: " << right_speed << " left: " << left_spee
   if (open_loop)
   {
     // motor power (scale 0-1000)
-    int32_t right_power = right_speed / wheel_circumference * 60.0 / 82.0 * 1000.0;
-    int32_t left_power = left_speed / wheel_circumference * 60.0 / 82.0 * 1000.0;
+    // int32_t right_power = right_speed / wheel_circumference * 60.0 / 82.0 * 1000.0; // 0.3192
+    // int32_t left_power = left_speed / wheel_circumference * 60.0 / 82.0 * 1000.0;
+
+    int32_t right_power = 100;
+    int32_t left_power = 100;
+
 #ifdef _CMDVEL_DEBUG
 ROS_DEBUG_STREAM("cmdvel power right: " << right_power << " left: " << left_power);
 #endif
@@ -273,6 +278,10 @@ ROS_DEBUG_STREAM("cmdvel power right: " << right_power << " left: " << left_powe
     // motor speed (rpm)
     int32_t right_rpm = right_speed / wheel_circumference * 60.0;
     int32_t left_rpm = left_speed / wheel_circumference * 60.0;
+
+    // int32_t right_rpm = 1000;
+    // int32_t left_rpm = 1000;
+    
 #ifdef _CMDVEL_DEBUG
 ROS_DEBUG_STREAM("cmdvel rpm right: " << right_rpm << " left: " << left_rpm);
 #endif
@@ -283,6 +292,10 @@ ROS_DEBUG_STREAM("cmdvel rpm right: " << right_rpm << " left: " << left_rpm);
   controller.write(right_cmd.str());
   controller.write(left_cmd.str());
   controller.flush();
+
+  std::cout<<right_cmd.str()<<std::endl;
+  
+  
 }
 
 void MainNode::cmdvel_setup()
@@ -322,8 +335,8 @@ void MainNode::cmdvel_setup()
   // set max speed (rpm) for relative speed commands
 //  controller.write("^MXRPM 1 82\r");
 //  controller.write("^MXRPM 2 82\r");
-  controller.write("^MXRPM 1 100\r");
-  controller.write("^MXRPM 2 100\r");
+  controller.write("^MXRPM 1 2500\r");
+  controller.write("^MXRPM 2 2500\r");
 
   // set max acceleration rate (200 rpm/s * 10)
 //  controller.write("^MAC 1 2000\r");
@@ -336,12 +349,18 @@ void MainNode::cmdvel_setup()
   controller.write("^MDEC 2 20000\r");
 
   // set PID parameters (gain * 10)
-  controller.write("^KP 1 10\r");
-  controller.write("^KP 2 10\r");
-  controller.write("^KI 1 80\r");
-  controller.write("^KI 2 80\r");
+  controller.write("^KP 1 1000\r");
+  controller.write("^KP 2 1000\r");
+  controller.write("^KI 1 2000000\r");
+  controller.write("^KI 2 2000000\r");
   controller.write("^KD 1 0\r");
   controller.write("^KD 2 0\r");
+  // controller.write("^KP 1 10\r");
+  // controller.write("^KP 2 10\r");
+  // controller.write("^KI 1 80\r");
+  // controller.write("^KI 2 80\r");
+  // controller.write("^KD 1 0\r");
+  // controller.write("^KD 2 0\r");
 
   // set encoder mode (18 for feedback on motor1, 34 for feedback on motor2)
   controller.write("^EMOD 1 18\r");
@@ -567,10 +586,41 @@ void MainNode::odom_loop()
 ROS_DEBUG_STREAM("encoder right: " << odom_encoder_right << " left: " << odom_encoder_left);
 #endif
             odom_publish();
+
+            // std::cout<<odom_encoder_left<<std::endl;
             break;
           }
         }
       }
+
+      else if ( odom_buf[0] == 'H' && odom_buf[1] == 'S' && odom_buf[2] == '=' )
+      {
+        int delim;
+        for ( delim = 3; delim < odom_idx; delim++ )
+        {
+          if ( odom_encoder_toss > 0 )
+          {
+            --odom_encoder_toss;
+            break;
+          }
+          if (odom_buf[delim] == ':')
+          {
+            odom_buf[delim] = 0;
+            odom_encoder_right = (uint8_t)strtol(odom_buf+3, NULL, 10);
+            odom_encoder_left = (uint8_t)strtol(odom_buf+delim+1, NULL, 10);
+#ifdef _ODOM_DEBUG
+ROS_DEBUG_STREAM("encoder right: " << odom_encoder_right << " left: " << odom_encoder_left);
+#endif
+            odom_publish();
+
+            // std::cout<<odom_encoder_left<<std::endl;
+            break;
+          }
+        }
+      }
+
+
+
 #ifdef _ODOM_SENSORS
       // V= is voltages
       else if ( odom_buf[0] == 'V' && odom_buf[1] == '=' )
