@@ -5,7 +5,6 @@
 #include <string>
 #include <sstream>
 #include <stdio.h>
-#include <cmath>
 
 
 #define DELTAT(_nowtime,_thentime) ((_thentime>_nowtime)?((0xffffffff-_thentime)+_nowtime):(_nowtime-_thentime))
@@ -91,12 +90,10 @@ public:
   void odom_setup();
   void odom_stream();
   void odom_loop();
-  void rpm_loop(); // made by HW
   //void odom_hs_run();
   void odom_ms_run();
   void odom_ls_run();
   void odom_publish();
-  void rpm_publish();
 #ifdef _ODOM_COVAR_SERVER
   void odom_covar_callback(const roboteq_diff_msgs::RequestOdometryCovariancesRequest& req, roboteq_diff_msgs::RequestOdometryCovariancesResponse& res);
 #endif
@@ -149,9 +146,6 @@ protected:
   int32_t odom_encoder_left;
   int32_t odom_encoder_right;
 
-  int32_t rpm_left;
-  int32_t rpm_right;
-
   float odom_x;
   float odom_y;
   float odom_yaw;
@@ -194,8 +188,6 @@ MainNode::MainNode() :
   odom_encoder_toss(5),
   odom_encoder_left(0),
   odom_encoder_right(0),
-  rpm_left(0),
-  rpm_right(0),
   odom_x(0.0),
   odom_y(0.0),
   odom_yaw(0.0),
@@ -239,9 +231,9 @@ MainNode::MainNode() :
   ROS_INFO_STREAM("baud: " << baud);
   nhLocal.param("open_loop", open_loop, false);
   ROS_INFO_STREAM("open_loop: " << open_loop);
-  nhLocal.param("wheel_circumference", wheel_circumference, 0.200); // Updated by HW. 2*pi*r. diameter = 0.2 -> r = 0.1
+  nhLocal.param("wheel_circumference", wheel_circumference, 0.3192);
   ROS_INFO_STREAM("wheel_circumference: " << wheel_circumference);
-  nhLocal.param("track_width", track_width, 0.628); // Updated by HW
+  nhLocal.param("track_width", track_width, 0.4318);
   ROS_INFO_STREAM("track_width: " << track_width);
   nhLocal.param("encoder_ppr", encoder_ppr, 900);
   ROS_INFO_STREAM("encoder_ppr: " << encoder_ppr);
@@ -274,8 +266,8 @@ ROS_DEBUG_STREAM("cmdvel speed right: " << right_speed << " left: " << left_spee
     // int32_t right_power = right_speed / wheel_circumference * 60.0 / 82.0 * 1000.0; // 0.3192
     // int32_t left_power = left_speed / wheel_circumference * 60.0 / 82.0 * 1000.0;
 
-    int32_t right_power = 1000;
-    int32_t left_power = 0;
+    int32_t right_power = 100;
+    int32_t left_power = 100;
 
 #ifdef _CMDVEL_DEBUG
 ROS_DEBUG_STREAM("cmdvel power right: " << right_power << " left: " << left_power);
@@ -286,17 +278,17 @@ ROS_DEBUG_STREAM("cmdvel power right: " << right_power << " left: " << left_powe
   else
   {
     // motor speed (rpm)
-    int32_t right_rpm = right_speed / (wheel_circumference/2) / (2 * M_PI) * 60.0 * (470/19);
-    int32_t left_rpm = left_speed / (wheel_circumference/2) / (2 * M_PI) * 60.0 * (470/19);
+    int32_t right_rpm = right_speed / wheel_circumference * 60.0;
+    int32_t left_rpm = left_speed / wheel_circumference * 60.0;
 
     // int32_t right_rpm = 1000;
-    // int32_t left_rpm = 0;
+    // int32_t left_rpm = 1000;
     
 #ifdef _CMDVEL_DEBUG
 ROS_DEBUG_STREAM("cmdvel rpm right: " << right_rpm << " left: " << left_rpm);
 #endif
-    right_cmd << "!S 2 " << right_rpm << "\r";
-    left_cmd << "!S 1 " << left_rpm << "\r";
+    right_cmd << "!S 1 " << right_rpm << "\r";
+    left_cmd << "!S 2 " << left_rpm << "\r";
   }
 
   controller.write(right_cmd.str());
@@ -304,7 +296,7 @@ ROS_DEBUG_STREAM("cmdvel rpm right: " << right_rpm << " left: " << left_rpm);
   controller.flush();
   // std::cout<<right_encoder<<std::endl;
   // std::cout<<left_encoder<<std::endl;
-  std::cout<<"cmd rpm is "<<right_cmd.str()<<std::endl;
+  // std::cout<<right_cmd.str()<<std::endl;
 
 
   // # Try 1. getvalue func is not defined.
@@ -576,7 +568,7 @@ void MainNode::odom_stream()
   // tripling frequency since one value is output at each cycle
   // controller.write("# C_?HS 1_?CR_?BA_?V_# 11\r");
   // controller.write("# C_?BS 1_# 100\r");
-  controller.write("# C_?BS_# 10\r");
+  controller.write("# C_?BS_# 100\r");
   // controller.write("# C_?S 1_# 50\r");
   
   // new command to figure "?HS" out
@@ -592,135 +584,6 @@ void MainNode::odom_stream()
   controller.flush();
 
 }
-
-
-// made by HW
-void MainNode::rpm_loop()
-{
-  // std::cout<<"hello"<<std::endl;
-  //  Read the ?BS from controller.read
-  // int hs_vel_buff = controller.read((uint8_t*)&read_buffer, 50);
-  // parsing 'read_buffer'. remove 'BS=' & 
-  // = and : as criteria to parse. 
-
-
-  // std::cout<<read_buffer<<std::endl; // Check
-
-  // if (controller.available())
-  // {
-  //   char ch = 0;
-  //   int hs_vel_buff = controller.read((uint8_t*)&read_buffer, 50);
-  //   std::cout<<read_buffer<<std::endl; // Check -> OK
-  //   if (read_buffer[0] == 'B' && read_buffer[1] == 'S' && read_buffer[2] == '=')
-  //   {
-  //     int delim;
-  //       std::cout<<"hello"<<std::endl;
-  //       for (delim = 3; delim < odom_idx; delim++)
-  //       {
-  //         if (read_buffer[delim] == ':')
-  //         {
-  //           read_buffer[delim] = 0;
-  //           rpm_right = (int32_t)strtol(read_buffer+3, NULL, 10);
-  //           rpm_left = (int32_t)strtol(read_buffer+delim+1, NULL, 10);
-  //           std::cout<<rpm_right<<std::endl; // Check
-  //   #ifdef _ODOM_DEBUG
-  //   ROS_DEBUG_STREAM("rpm right: " << rpm_right << " left: " << rpm_left);
-  //   #endif
-  //               rpm_publish();
-
-  //               break;
-  //         }
-  //       }
-  //   }
-
-
-
-  //   if (ch == '\r') // ????
-  //   {
-  //     odom_buf[odom_idx] = 0;
-  //     if (odom_buf[0] == 'B' && odom_buf[1] == 'S' && odom_buf[2] == '=')
-  //     {
-  //       int delim;
-  //       std::cout<<"hello"<<std::endl;
-  //       for (delim = 3; delim < odom_idx; delim++)
-  //       {
-  //         if (odom_buf[delim] == ':')
-  //         {
-  //           odom_buf[delim] = 0;
-  //           rpm_right = (int32_t)strtol(odom_buf+3, NULL, 10);
-  //           rpm_left = (int32_t)strtol(odom_buf+delim+1, NULL, 10);
-  //           std::cout<<rpm_right<<std::endl; // Check
-  //   #ifdef _ODOM_DEBUG
-  //   ROS_DEBUG_STREAM("rpm right: " << rpm_right << " left: " << rpm_left);
-  //   #endif
-  //               rpm_publish();
-
-  //               break;
-  //         }
-  //       }
-  //     }
-
-  //     odom_idx = 0;
-  //   }
-
-  //   else if ( odom_idx < (sizeof(odom_buf)-1) )
-  //   {
-  //     odom_buf[odom_idx++] = ch;
-  //   }
-
-  // }
-
-
-
-
-  // copied from original code
-  if (controller.available())
-  {
-    char ch = 0;
-    if ( controller.read((uint8_t*)&ch, 1) == 0 )
-      return;
-    // std::cout<<ch<<std::endl; // Check
-    if (ch == '\r')
-    {
-      odom_buf[odom_idx] = 0;
-      // std::cout<<"hello"<<std::endl;
-      if (odom_buf[0] == 'B' && odom_buf[1] == 'S' && odom_buf[2] == '=')
-      {
-        int delim;
-        // std::cout<<"hello"<<std::endl;
-        for (delim = 3; delim < odom_idx; delim++)
-        {
-          if (odom_buf[delim] == ':')
-          {
-            odom_buf[delim] = 0;
-            // rpm_right = (int32_t)strtol(odom_buf+3, NULL, 10);
-            // rpm_left = (int32_t)strtol(odom_buf+delim+1, NULL, 10);
-            rpm_left = (int32_t)strtol(odom_buf+3, NULL, 10);
-            rpm_right = (int32_t)strtol(odom_buf+delim+1, NULL, 10);
-
-            std::cout<<"Reading rpm is "<<rpm_right<<std::endl; // Check
-            // std::cout<<rpm_left<<std::endl; // Check
-    #ifdef _ODOM_DEBUG
-    ROS_DEBUG_STREAM("rpm right: " << rpm_right << " left: " << rpm_left);
-    #endif
-                rpm_publish();
-
-                break;
-          }
-        }
-      }
-
-      odom_idx = 0;
-    }
-
-    else if ( odom_idx < (sizeof(odom_buf)-1) )
-    {
-      odom_buf[odom_idx++] = ch;
-    }
-
-  }
-}
-
 
 void MainNode::odom_loop()
 {
@@ -909,108 +772,6 @@ void MainNode::odom_ls_run()
 
 }
 
-// made by HW
-void MainNode::rpm_publish()
-{
-
-  // determine delta time in seconds
-  uint32_t nowtime = millis();
-  float dt = (float)DELTAT(nowtime,odom_last_time) / 1000.0;
-  odom_last_time = nowtime;
-
-#ifdef _ODOM_DEBUG
-/*
-ROS_DEBUG("right: ");
-ROS_DEBUG(odom_encoder_right);
-ROS_DEBUG(" left: ");
-ROS_DEBUG(odom_encoder_left);
-ROS_DEBUG(" dt: ");
-ROS_DEBUG(dt);
-ROS_DEBUG("");
-*/
-#endif
-
-  // determine deltas of distance and angle
-  // float linear = ((float)odom_encoder_right / (float)encoder_cpr * wheel_circumference + (float)odom_encoder_left / (float)encoder_cpr * wheel_circumference) / 2.0;
-  // float angular = ((float)odom_encoder_right / (float)encoder_cpr * wheel_circumference - (float)odom_encoder_left / (float)encoder_cpr * wheel_circumference) / track_width;
-
-  //gear ratio = 470/19:1
-  float w_right = (float)rpm_right * (2 * M_PI) / 60 / (470/19);
-  float w_left = (float)rpm_left * (2 * M_PI) / 60 / (470/19);
-  float linear = 0.1* (w_right + w_left) / 2.0;
-  float angular = 0.1 * (w_right - w_left) / track_width;
-  std::cout<<linear<<std::endl; // Check
-
-#ifdef _ODOM_DEBUG
-/*
-ROS_DEBUG("linear: ");
-ROS_DEBUG(linear);
-ROS_DEBUG(" angular: ");
-ROS_DEBUG(angular);
-ROS_DEBUG("");
-*/
-#endif
-
-  // Update odometry
-  odom_x += linear * cos(odom_yaw) * dt;        // m
-  odom_y += linear * sin(odom_yaw) * dt;        // m
-  odom_yaw = NORMALIZE(odom_yaw + angular*dt);  // rad
-#ifdef _ODOM_DEBUG
-//ROS_DEBUG_STREAM( "odom x: " << odom_x << " y: " << odom_y << " yaw: " << odom_yaw );
-#endif
-
-  // Calculate velocities
-  float vx = (odom_x - odom_last_x) / dt;
-  float vy = (odom_y - odom_last_y) / dt;
-  float vyaw = (odom_yaw - odom_last_yaw) / dt;
-#ifdef _ODOM_DEBUG
-//ROS_DEBUG_STREAM( "velocity vx: " << odom_x << " vy: " << odom_y << " vyaw: " << odom_yaw );
-#endif
-  odom_last_x = odom_x;
-  odom_last_y = odom_y;
-  odom_last_yaw = odom_yaw;
-#ifdef _ODOM_DEBUG
-/*
-ROS_DEBUG("vx: ");
-ROS_DEBUG(vx);
-ROS_DEBUG(" vy: ");
-ROS_DEBUG(vy);
-ROS_DEBUG(" vyaw: ");
-ROS_DEBUG(vyaw);
-ROS_DEBUG("");
-*/
-#endif
-
-  geometry_msgs::Quaternion quat = tf::createQuaternionMsgFromYaw(odom_yaw);
-
-  if ( pub_odom_tf )
-  {
-    tf_msg.header.seq++;
-    tf_msg.header.stamp = ros::Time::now();
-    tf_msg.transform.translation.x = odom_x;
-    tf_msg.transform.translation.y = odom_y;
-    tf_msg.transform.translation.z = 0.0;
-    tf_msg.transform.rotation = quat;
-    odom_broadcaster.sendTransform(tf_msg);
-  }
-
-  odom_msg.header.seq++;
-  odom_msg.header.stamp = ros::Time::now();
-  odom_msg.pose.pose.position.x = odom_x;
-  odom_msg.pose.pose.position.y = odom_y;
-  odom_msg.pose.pose.position.z = 0.0;
-  odom_msg.pose.pose.orientation = quat;
-  odom_msg.twist.twist.linear.x = vx;
-  odom_msg.twist.twist.linear.y = vy;
-  odom_msg.twist.twist.linear.z = 0.0;
-  odom_msg.twist.twist.angular.x = 0.0;
-  odom_msg.twist.twist.angular.y = 0.0;
-  odom_msg.twist.twist.angular.z = vyaw;
-  odom_pub.publish(odom_msg);
-
-}
-
-
 void MainNode::odom_publish()
 {
 
@@ -1151,12 +912,12 @@ int MainNode::run()
   while (ros::ok())
   {
 
-    // cmdvel_loop(); // unembodiment function
-
-
-    rpm_loop(); // made by HW. Use ?BS to read rpm from hall sensor
-
-
+    cmdvel_loop();
+    int hs_vel_buff = controller.read((uint8_t*)&read_buffer, 50);
+    // parsing 'read_buffer'. remove 'BS=' & 
+    // = and : as criteria to parse. 
+    
+    std::cout<<read_buffer<<std::endl;
     // odom_loop();
     // To remove redundant read func.
 

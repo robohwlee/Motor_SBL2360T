@@ -15,6 +15,7 @@
     <!-- specify port for roboteq controller -->
     <!-- <param name="port" value="/dev/ttyACM0" /> -->
     <!-- <param name="port" value="/dev/ttyUSB0" /> -->
+    <!-- <param name="port" value="/dev/ttyS2" /> -->
     <param name="port" value="/dev/ttyS1" />
     <param name="baud" value="115200" />
     <!-- specify whether to use open-loop motor speed control (as opposed to closed-loop)-->
