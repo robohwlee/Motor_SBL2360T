@@ -1,0 +1,20 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/mlcs/catkin_ws/devel/include/**",
+        "/opt/ros/melodic/include/**",
+        "/home/mlcs/catkin_ws/src/roboteq_control/include/**",
+        "/home/mlcs/catkin_ws/src/Motor_SBL2360T/roboteq_diff_driver/include/**",
+        "/home/mlcs/catkin_ws/src/ROS-Driver/ROS-Driver-Update/roboteq_motor_controller_driver/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ],
+  "version": 4
+}

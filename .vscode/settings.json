@@ -56,5 +56,13 @@
         "set": "cpp",
         "string": "cpp",
         "string_view": "cpp"
-    }
+    },
+    "python.autoComplete.extraPaths": [
+        "/home/mlcs/catkin_ws/devel/lib/python2.7/dist-packages",
+        "/opt/ros/melodic/lib/python2.7/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/mlcs/catkin_ws/devel/lib/python2.7/dist-packages",
+        "/opt/ros/melodic/lib/python2.7/dist-packages"
+    ]
 }
